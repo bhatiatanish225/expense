@@ -19,13 +19,15 @@ require('./utils/handlebars-helper')
 const PORT = process.env.PORT || 3000
 const app = express()
 
-// Connect Redis
-const client = redis.createClient({
-  url: `rediss://${process.env.REDIS_ENDPOINT_URI}`,   // <<< IMPORTANT: use rediss
-  password: process.env.REDIS_PASSWORD
-})
-
-client.connect().catch(console.error)
+// Connect Redis (fixed for redis v3.x)
+const client = redis.createClient(
+  6379,  // Default Redis port
+  process.env.REDIS_ENDPOINT_URI, // Your Upstash endpoint
+  { 
+    password: process.env.REDIS_PASSWORD,
+    tls: {}  // Upstash needs TLS
+  }
+)
 
 client.on('connect', function () {
   console.log('Connected to Redis successfully!')
@@ -48,7 +50,7 @@ app.use(
     saveUninitialized: false,
     cookie: {
       sameSite: 'strict',
-      secure: true,    // <<< IMPORTANT: secure true for HTTPS on Render
+      secure: true,    // <<< Important for HTTPS on Render
       httpOnly: true
     }
   })
